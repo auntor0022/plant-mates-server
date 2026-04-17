@@ -13,10 +13,6 @@ app.get("/", (req, res) => {
   res.send("PlantMates server is getting hotter");
 });
 
-//const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v7u164c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-//const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-enjhdkr-shard-00-00.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-01.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-02.v7u164c.mongodb.net:27017/?ssl=true&replicaSet=atlas-13p06k-shard-0&authSource=admin&appName=Cluster0`;
-
-
 const uri =
   process.env.NODE_ENV === "production"
     ? `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v7u164c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
