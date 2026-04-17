@@ -13,9 +13,16 @@ app.get("/", (req, res) => {
   res.send("PlantMates server is getting hotter");
 });
 
+//const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v7u164c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+//const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-enjhdkr-shard-00-00.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-01.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-02.v7u164c.mongodb.net:27017/?ssl=true&replicaSet=atlas-13p06k-shard-0&authSource=admin&appName=Cluster0`;
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v7u164c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
+const uri =
+  process.env.NODE_ENV === "production"
+    ? `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v7u164c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+    : `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-enjhdkr-shard-00-00.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-01.v7u164c.mongodb.net:27017,ac-enjhdkr-shard-00-02.v7u164c.mongodb.net:27017/?ssl=true&replicaSet=atlas-13p06k-shard-0&authSource=admin&appName=Cluster0`;
+
+console.log(uri);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -26,7 +33,9 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
-    // await client.connect();
+    if (!client.topology || !client.topology.isConnected()) {
+      await client.connect();
+    }
 
     const featureGardenCollection = client
       .db("plantmatesDB")
@@ -50,8 +59,14 @@ async function run() {
 
     // read tips data
     app.get("/tips", async (req, res) => {
-      const result = await tipsCollection.find().toArray();
-      res.send(result);
+      try {
+        const result = await tipsCollection.find().toArray();
+        res.send(result);
+         
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: "Failed to fetch tips" });
+      }
     });
 
     app.get("/mydata/:email", async (req, res) => {
@@ -65,10 +80,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await tipsCollection.findOne(query);
       res.send(result);
-    });
-
-    app.get("/tips/:id", (req, res) => {
-      const id = req.params.id;
     });
 
     // create tips data
@@ -114,14 +125,15 @@ async function run() {
     //Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
+      "Pinged your deployment. You successfully connected to MongoDB!",
     );
   } finally {
-
   }
 }
 run().catch(console.dir);
+// module.exports = app;
 
 app.listen(port, () => {
-  console.log(`PlantMates server is running on PORT ${port}`);
-});
+  console.log(`PlantMates server is running on port: ${port}`);
+}); 
+
